@@ -23,9 +23,26 @@ jobs:
           java-version: "17"
 
       - name: Install dependencies (include dev)
-  run: npm install --include=dev
-- name: Verify TypeScript
-  run: npx tsc -v
+        run: npm install --include=dev
+
+      - name: Verify TypeScript
+        run: npx tsc -v
+
+      - name: Add Android platform
+        run: npx cap add android || echo "Android already added"
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ADDON-S-Hawkeye-Pro-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Add Android platform
         run: npx cap add android || echo "Android already added"
