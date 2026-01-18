@@ -6,44 +6,43 @@ on:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Set up Java
+      - name: Setup Java (JDK 17)
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Install dependencies (include dev)
-        working-directory: addons_hawkeye_pro
-        run: npm install --include=dev
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Verify TypeScript
-        working-directory: addons_hawkeye_pro
-        run: npx tsc -v
+      - name: Add Android platform (Capacitor)
+        run: npx cap add android
 
-      - name: Add Android platform
-        working-directory: addons_hawkeye_pro
-        run: npx cap add android || echo "Android already added"
+      - name: Apply App Icon + Splash
+        shell: bash
+        run: |
+          cp -r assets/android-res/mipmap-* android/app/src/main/res/
+          mkdir -p android/app/src/main/res/drawable
+          cp assets/android-res/drawable/splash_screen.png android/app/src/main/res/drawable/splash_screen.png
 
       - name: Sync Capacitor
-        working-directory: addons_hawkeye_pro
         run: npx cap sync android
 
       - name: Build Debug APK
-        working-directory: addons_hawkeye_pro/android
+        working-directory: android
         run: ./gradlew assembleDebug
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ADDON-S-Hawkeye-Pro-debug-apk
-          path: addons_hawkeye_pro/android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/*.apk 
